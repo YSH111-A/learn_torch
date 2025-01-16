@@ -35,4 +35,5 @@ for data in dataloader:
     output = torch.reshape(output,(-1,3,30,30))
     writer.add_images('output',output,step)
     step +=1
+    ####fsa
 
