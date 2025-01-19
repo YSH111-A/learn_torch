@@ -40,3 +40,5 @@ for data in dataloader:
 
 
 writer.close()
+
+print("f")
