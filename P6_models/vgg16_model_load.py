@@ -1,5 +1,6 @@
 import torch
 import torchvision.models
+from models_saved import  *
 
 from P6_models.model_trained import vgg_16
 
