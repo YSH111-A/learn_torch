@@ -4,7 +4,10 @@ from torch import nn
 from torch.utils.data import DataLoader
 from model import *
 from torch.utils.tensorboard import SummaryWriter
-import time
+import  time
+
+###cuda加速只能针对 model、损失函数、数据
+
 #准备数据集
 train_data = torchvision.datasets.CIFAR10(
     root='..\data_set', train=True, download=True, transform=torchvision.transforms.ToTensor()
@@ -25,10 +28,13 @@ test_dataloader = DataLoader(test_data, batch_size=64)
 
 #创建网络模型
 sh = Net()
-
+if torch.cuda.is_available():
+    sh =sh.cuda()
+    print("cuda.is available!")
 #损失函数
 loss_fun = nn.CrossEntropyLoss()
-
+if torch.cuda.is_available():
+    loss_fun = loss_fun.cuda()
 #优化器
 learning_rate = 1e-2
 optimizer = torch.optim.Adam(sh.parameters(), lr=learning_rate)
@@ -40,18 +46,18 @@ epochs = 10
 ##添加tesnsorboard
 writer = SummaryWriter('./logs_train')
 
-
 start_time = time.time()
-
 for epoch in range(epochs):
     print("-----------第{}轮训练开始----------".format(epoch+1))
 
     #训练
     sh.train()
     for data in train_dataloader:
-        img,target = data
+        img,targets = data
+        if torch.cuda.is_available():
+            img,targets = img.cuda(),targets.cuda()
         output = sh(img)
-        loss = loss_fun(output, target)
+        loss = loss_fun(output, targets)
 
         #优化器
         optimizer.zero_grad()
@@ -60,7 +66,7 @@ for epoch in range(epochs):
         train_step += 1
         if train_step % 100 == 0:
             end_time = time.time()
-            print("训练{}次花费时间：{}".format(train_step,end_time - start_time))
+            print("花费时间:{}".format(end_time - start_time))
             print("训练次数：{},损失{}".format(train_step,loss.item()))
             writer.add_scalar('loss', loss.item(), train_step)
 
@@ -71,6 +77,8 @@ for epoch in range(epochs):
     with torch.no_grad():
         for data in test_dataloader:
             img, targets = data
+            if torch.cuda.is_available():
+                img, targets = img.cuda(),targets.cuda()
             output = sh(img)
             loss = loss_fun(output, targets)
             total_loss += loss.item()
